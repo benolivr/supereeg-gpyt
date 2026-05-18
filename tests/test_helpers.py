@@ -1,6 +1,3 @@
-from __future__ import print_function
-from __future__ import division
-from past.utils import old_div
 import supereeg as se
 import glob
 from supereeg.helpers import *
@@ -110,14 +107,14 @@ def test_z_score():
 
 def test_int_z2r():
     z = 1
-    test_val = old_div((np.exp(2 * z) - 1), (np.exp(2 * z) + 1))
+    test_val = (np.exp(2 * z) - 1) / (np.exp(2 * z) + 1)
     input_val = _z2r(z)
     assert isinstance(input_val, (float, int))
     assert test_val == input_val
 
 def test_array_z2r():
     z = np.array([1, 2, 3])
-    test_val = old_div((np.exp(2 * z) - 1), (np.exp(2 * z) + 1))
+    test_val = (np.exp(2 * z) - 1) / (np.exp(2 * z) + 1)
     test_fun = _z2r(z)
     assert isinstance(test_fun, np.ndarray)
     assert np.allclose(test_val, test_fun)
@@ -166,7 +163,7 @@ def test_filter_elecs():
 
 
 def test_corr_column():
-    X = np.matrix([[1, 2, 3], [1, 2, 3]])
+    X = np.array([[1, 2, 3], [1, 2, 3]])
     corr_vals = _corr_column(np.array([[.1, .4], [.2, .5], [.3, .6]]), np.array([[.1, .4], [.2, .5], [.3, .6]]))
     print(corr_vals)
     assert isinstance(corr_vals, (float, np.ndarray))
@@ -247,6 +244,6 @@ def test_bo_nii_bo():
 def test_nii_bo_nii():
     bo_nii = se.Brain(_gray(20))
     nii = _brain_to_nifti(bo_nii, _gray(20))
-    nii_0 = _gray(20).get_data().flatten()
+    nii_0 = _gray(20).get_fdata().flatten()
     nii_0[np.isnan(nii_0)] = 0
-    assert np.allclose(nii_0, nii.get_data().flatten())
+    assert np.allclose(nii_0, nii.get_fdata().flatten())

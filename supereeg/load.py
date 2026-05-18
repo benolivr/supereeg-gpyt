@@ -1,10 +1,9 @@
-from __future__ import print_function
 import os
 import warnings
 import requests
 import numpy as np
 import pandas as pd
-import deepdish as dd
+from . import hdf5 as hdf5_io
 from datetime import datetime
 from .brain import Brain
 from .model import Model
@@ -13,6 +12,7 @@ from .location import Location
 from .helpers import _resample_nii
 
 BASE_URL = 'https://docs.google.com/uc?export=download'
+USERCONTENT_URL = 'https://drive.usercontent.google.com/download'
 homedir = os.path.expanduser('~')
 datadir = os.path.join(homedir, 'supereeg_data')
 
@@ -143,8 +143,11 @@ def _convert(data, return_type, vox_size):
 
 def _load_example(fname, fileid, sample_inds, loc_inds, field):
     """ Loads in dataset given a google file id """
-    # workaround for https://github.com/uchicago-cs/deepdish/issues/36
-    pd.io.pytables._tables()
+    # ensure PyTables is initialized for pandas HDFStore
+    try:
+        pd.io.pytables._tables()
+    except Exception:
+        pass
 
     fullpath = os.path.join(homedir, 'supereeg_data', fname + '.' + fileid[1])
     if not os.path.exists(datadir):
@@ -152,6 +155,7 @@ def _load_example(fname, fileid, sample_inds, loc_inds, field):
     if not os.path.exists(fullpath):
         try:
             _download(fname, _load_stream(fileid[0]), fileid[1])
+            _migrate_if_legacy(fullpath)
             data = _load_from_cache(fname, fileid[1], sample_inds, loc_inds, field)
         except ValueError as e:
             print(e)
@@ -159,48 +163,99 @@ def _load_example(fname, fileid, sample_inds, loc_inds, field):
     else:
         try:
             data = _load_from_cache(fname, fileid[1], sample_inds, loc_inds, field)
-        except:
+        except Exception:
             try:
-                _download(fname, _load_stream(fileid[0]), fileid[1])
+                _migrate_if_legacy(fullpath)
                 data = _load_from_cache(fname, fileid[1], sample_inds, loc_inds, field)
-            except ValueError as e:
-                print(e)
-                raise ValueError('Download failed. Try deleting cache data in'
-                                 ' /Users/homedir/supereeg_data.') #FIXME: use generic home directory reference rather than platform-specific path
+            except Exception:
+                try:
+                    _download(fname, _load_stream(fileid[0]), fileid[1])
+                    _migrate_if_legacy(fullpath)
+                    data = _load_from_cache(fname, fileid[1], sample_inds, loc_inds, field)
+                except ValueError as e:
+                    print(e)
+                    raise ValueError('Download failed. Try deleting cache data in'
+                                     ' {}.'.format(datadir))
     return data
+
+
+def _migrate_if_legacy(fullpath):
+    """ Migrate deepdish legacy file to new HDF5 format if needed """
+    ext = fullpath.rsplit('.', 1)[-1]
+    if ext not in ('bo', 'mo'):
+        return
+    import h5py
+    needs_migration = False
+    try:
+        with h5py.File(fullpath, 'r') as h5file:
+            needs_migration = 'format_version' not in h5file.attrs
+    except Exception:
+        return
+    if needs_migration:
+        hdf5_io.migrate_deepdish_file(fullpath, overwrite=True)
 
 
 def _load_stream(fileid):
     """ Retrieve data from google drive """
+    import re
+
     def _get_confirm_token(response):
         for key, value in response.cookies.items():
             if key.startswith('download_warning'):
                 return value
         return None
-    url = BASE_URL + fileid
+
+    def _is_html(response):
+        content_type = response.headers.get('Content-Type', '')
+        if 'text/html' in content_type:
+            return True
+        # peek at first bytes without consuming the stream
+        return response.content[:15].lstrip().startswith(b'<')
+
+    def _extract_uuid(html_text):
+        match = re.search(r'name="uuid"\s+value="([^"]+)"', html_text)
+        return match.group(1) if match else None
+
     session = requests.Session()
-    response = session.get(BASE_URL, params = { 'id' : fileid }, stream = True)
+    response = session.get(BASE_URL, params={'id': fileid}, stream=True)
+
+    # Legacy cookie-based confirmation (small files)
     token = _get_confirm_token(response)
     if token:
-        params = { 'id' : fileid, 'confirm' : token }
-        response = session.get(BASE_URL, params = params, stream = True)
+        response = session.get(BASE_URL, params={'id': fileid, 'confirm': token}, stream=True)
+
+    # New virus-scan warning page (large files) — parse uuid from HTML form
+    if _is_html(response):
+        html_text = response.text
+        uuid = _extract_uuid(html_text)
+        params = {'id': fileid, 'export': 'download', 'confirm': 't'}
+        if uuid:
+            params['uuid'] = uuid
+        response = session.get(USERCONTENT_URL, params=params, stream=True)
+
     return response
 
 
 def _download(fname, data, ext):
     """ Download data to cache """
+    content = data.content
+    if content.lstrip()[:9] in (b'<!DOCTYPE', b'<!doctype') or content.lstrip()[:5] == b'<html':
+        raise ValueError(
+            'Download returned an HTML page instead of file data. '
+            'The Google Drive link for "{}" may be broken or require manual download.'.format(fname)
+        )
     fullpath = os.path.join(homedir, 'supereeg_data', fname)
     with open(fullpath + '.' + ext, 'wb') as f:
-        f.write(data.content)
+        f.write(content)
 
 
 def _load_from_path(fpath, sample_inds=None, loc_inds=None, field=None):
     """ Load a file from a local path """
     try:
         ext = fpath.split('.')[-1]
-    except:
+    except (AttributeError, IndexError):
         raise ValueError("Must specify a file extension.")
-    if field != None:
+    if field is not None:
         if ext in ['bo', 'mo']:
             return _load_field(fpath, field)
         else:
@@ -209,13 +264,16 @@ def _load_from_path(fpath, sample_inds=None, loc_inds=None, field=None):
         if sample_inds!=None or loc_inds!=None:
             return Brain(**_load_slice(fpath, sample_inds, loc_inds))
         else:
-            return Brain(**dd.io.load(fpath))
+            return Brain(**hdf5_io.load_brain(fpath))
     elif ext=='mo':
-        return Model(**dd.io.load(fpath))
+        return Model(**hdf5_io.load_model(fpath))
+    elif ext=='locs':
+        loc_data = hdf5_io.load_location(fpath)
+        return Location(loc_data["locs"], meta=loc_data["meta"], date_created=loc_data["date_created"])
     elif ext in ('nii', 'gz'):
         return Nifti(fpath)
     else:
-        raise ValueError("Filetype not recognized. Must be .bo, .mo or .nii.")
+        raise ValueError("Filetype not recognized. Must be .bo, .mo, .locs or .nii.")
 
 
 def _load_from_cache(fname, ftype, sample_inds=None, loc_inds=None, field=None):
@@ -230,7 +288,7 @@ def _load_from_cache(fname, ftype, sample_inds=None, loc_inds=None, field=None):
         if sample_inds is not None or loc_inds is not None:
             return Brain(**_load_slice(fullpath, sample_inds, loc_inds))
         else:
-            return Brain(**dd.io.load(fullpath))
+            return Brain(**hdf5_io.load_brain(fullpath))
     elif ftype == 'mo':
         # if the model was created using supereeg<0.2.0, load using the "old" format
         # (i.e. supereeg>=0.2.0 computes model in log space)
@@ -242,16 +300,17 @@ def _load_from_cache(fname, ftype, sample_inds=None, loc_inds=None, field=None):
             n_subs = _load_field(fullpath, field='n_subs')
             return Model(data=np.divide(num, den), locs=locs, n_subs=n_subs)
         else:
-            return Model(**dd.io.load(fullpath))
+            return Model(**hdf5_io.load_model(fullpath))
     elif ftype == 'nii':
         return Nifti(fullpath)
     elif ftype == 'locs':
-        return Location(fullpath)
+        loc_data = hdf5_io.load_location(fullpath)
+        return Location(loc_data["locs"], meta=loc_data["meta"], date_created=loc_data["date_created"])
 
 
 def _load_field(fname, field):
     """ Loads a particular field of a file """
-    return dd.io.load(fname, group='/' + field) #FIXME: use os.path.join rather than using slashes
+    return hdf5_io.load_field(fname, field)
 
 
 def _load_slice(fname, sample_inds=None, loc_inds=None):
@@ -276,29 +335,36 @@ def _load_slice(fname, sample_inds=None, loc_inds=None):
 
     """
 
-    sr = dd.io.load(fname, group='/sample_rate') #FIXME: use os.path.join rather than using slashes
-    meta = dd.io.load(fname, group='/meta') #FIXME: use os.path.join rather than using slashes
-    date_created = dd.io.load(fname, group='/date_created') #FIXME: use os.path.join rather than using slashes
+    return hdf5_io.load_slice(fname, sample_inds=sample_inds, loc_inds=loc_inds)
 
-    if sample_inds!=None and loc_inds!=None:
-        if not isinstance(sample_inds, int) and not isinstance(loc_inds, int):
-            raise IndexError("Slicing with 2 lists is currently not supported.") #FIXME: make this message more specific
-        data = dd.io.load(fname, group='/data', sel=dd.aslice[sample_inds, loc_inds]) #FIXME: use os.path.join rather than using slashes
-        locs = dd.io.load(fname, group='/locs', sel=dd.aslice[loc_inds, :]) #FIXME: use os.path.join rather than using slashes
-        sessions = dd.io.load(fname, group='/sessions').iloc[sample_inds].tolist() #FIXME: use os.path.join rather than using slashes
-    elif loc_inds==None:
-        data = dd.io.load(fname, group='/data', sel=dd.aslice[sample_inds, :]) #FIXME: use os.path.join rather than using slashes
-        locs = dd.io.load(fname, group='/locs') #FIXME: use os.path.join rather than using slashes
-        sessions = dd.io.load(fname, group='/sessions').iloc[sample_inds].tolist() #FIXME: use os.path.join rather than using slashes
-    elif sample_inds==None:
-        data = dd.io.load(fname, group='/data', sel=dd.aslice[:, loc_inds]) #FIXME: use os.path.join rather than using slashes
-        locs = dd.io.load(fname, group='/locs', sel=dd.aslice[loc_inds, :]) #FIXME: use os.path.join rather than using slashes
-        sessions = dd.io.load(fname, group='/sessions').tolist() #FIXME: use os.path.join rather than using slashes
-    sample_rate = [sr[int(s-1)] for s in np.unique(sessions)]
-    data = np.atleast_2d(data)
-    locs = np.atleast_2d(locs)
-    if locs.shape[0]==1:
-        if data.shape[1]>data.shape[0]:
-            data = data.T
-    return dict(data=data, locs=locs,
-                sample_rate=sample_rate, meta=meta, date_created=date_created)
+
+def migrate_deepdish(path, overwrite=False, compression='blosc', recursive=False):
+    """Convert legacy deepdish .bo/.mo/.locs files to the new HDF5 format."""
+    if os.path.isdir(path):
+        candidates = []
+        if recursive:
+            for root, _, files in os.walk(path):
+                for name in files:
+                    fullpath = os.path.join(root, name)
+                    if name.lower().endswith(('.bo', '.mo', '.locs')):
+                        candidates.append(fullpath)
+        else:
+            for name in os.listdir(path):
+                fullpath = os.path.join(path, name)
+                if os.path.isfile(fullpath) and name.lower().endswith(('.bo', '.mo', '.locs')):
+                    candidates.append(fullpath)
+
+        converted = []
+        for fullpath in sorted(candidates):
+            converted.append(
+                hdf5_io.migrate_deepdish_file(
+                    fullpath, overwrite=overwrite, compression=compression
+                )
+            )
+        return converted
+
+    return [
+        hdf5_io.migrate_deepdish_file(
+            path, overwrite=overwrite, compression=compression
+        )
+    ]

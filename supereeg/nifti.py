@@ -1,8 +1,4 @@
-from __future__ import division
-from __future__ import print_function
-
 import numpy as np
-import six # Python 2 and 3 compatibility
 from nibabel import Nifti1Image, Nifti2Image
 from nilearn.image import concat_imgs, index_img
 from nilearn import plotting as ni_plt
@@ -46,7 +42,7 @@ class Nifti(Nifti1Image):
         from .brain import Brain
         from .model import Model
 
-        if isinstance(data, six.string_types):
+        if isinstance(data, str):
             if data in datadict.keys():
                 data = load(data)
             else:
@@ -298,7 +294,7 @@ class Nifti2(Nifti2Image):
         from .brain import Brain
         from .model import Model
 
-        if isinstance(data, six.string_types):
+        if isinstance(data, str):
             if data in datadict.keys():
                 data = load(data)
             else:

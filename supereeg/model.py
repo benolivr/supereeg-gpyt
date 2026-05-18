@@ -1,13 +1,10 @@
-from __future__ import division
-from __future__ import print_function
 import time
 import copy
 import warnings
-import six
 import pandas as pd
 import numpy as np
 import seaborn as sns
-import deepdish as dd
+from . import hdf5 as hdf5_io
 import matplotlib.pyplot as plt
 from .helpers import _get_corrmat, _r2z, _z2r, _log_rbf, _blur_corrmat, _plot_borderless,\
     _near_neighbor, _timeseries_recon, _count_overlapping, _plot_locs_connectome, \
@@ -137,7 +134,7 @@ class Model(object):
                                           rbf_width=self.rbf_width, n_subs=1,
                                           gpu=self.gpu))
 
-            if isinstance(data, six.string_types):
+            if isinstance(data, str):
                 data = load(data)
 
             if isinstance(data, Nifti):
@@ -188,7 +185,7 @@ class Model(object):
         if not (template is None): #blur correlation matrix out to template locations
             if not (locs is None):
                 warnings.warn('Argument ''locs'' will be ignored in favor of the provided Nifti template')
-            if isinstance(template, six.string_types):
+            if isinstance(template, str):
                 template = load(template)
             assert type(template) == Nifti, 'template must be a Nifti object or a path to a Nifti object'
             bo = Brain(template)
@@ -467,7 +464,7 @@ class Model(object):
         if np.shape(corr_mat)[0] < 2000:
             ax = sns.heatmap(corr_mat, cbar_kws = {'label': 'correlation'}, **kwargs)
         else:
-            if savefile == None:
+            if savefile is None:
                 raise NotImplementedError('Cannot plot large models when savefile is None')
             else:
                 ax = _plot_borderless(corr_mat, savefile=savefile, vmin=-1, vmax=1, cmap='Spectral')
@@ -496,8 +493,8 @@ class Model(object):
         """
         Save method for the model object
         The data will be saved as a 'mo' file, which is a dictionary containing
-        the elements of a model object saved in the hd5 format using
-        `deepdish`.
+        the elements of a model object saved in the HDF5 format using
+        h5py for arrays and pandas for tables.
 
         Parameters
         ----------
@@ -505,24 +502,13 @@ class Model(object):
             A name for the file.  If the file extension (.mo) is not specified,
             it will be appended.
         compression : str
-            The kind of compression to use.  See the deepdish documentation for
-            options: http://deepdish.readthedocs.io/en/latest/api_io.html#deepdish.io.save
+            The kind of compression to use. "blosc" maps to gzip for h5py.
         """
-
-        mo = {
-            'numerator' : self.numerator,
-            'denominator' : self.denominator,
-            'locs' : self.locs,
-            'n_subs' : self.n_subs,
-            'meta' : self.meta,
-            'date_created' : self.date_created,
-            'rbf_width' : self.rbf_width
-        }
 
         if fname[-3:]!='.mo':
             fname+='.mo'
 
-        dd.io.save(fname, mo, compression=compression)
+        hdf5_io.save_model(self, fname, compression=compression)
 
     def get_slice(self, loc_inds, inplace=False):
         """

@@ -18,3 +18,5 @@ The way the technique works is to leverage data from different patients' brains 
 Although our toolbox is designed with ECoG data in mind, in theory this tool could be applied to a very general set of applications.  The general problem we solve is: given known (correlational) structure of a large number of "features," and given that (at any one time) you only observe some of those features, how much can you infer about what the remaining features are doing?
 
 Please take a look at the `API specification <http://supereeg.readthedocs.io/en/latest/api.html>`_ for a detailed description of each part of the toolbox.  In addition, we have provided `tutorials <http://supereeg.readthedocs.io/en/latest/tutorial.html>`_ for carrying out the various supported toolbox operations.  We also provide a `gallery of examples <http://supereeg.readthedocs.io/en/latest/auto_examples/index.html>`_ that highlights some of the most important functionality.
+
+If you have ``.bo`` or ``.mo`` files saved with an older version of supereeg, see the `migration guide <http://supereeg.readthedocs.io/en/latest/migration.html>`_ for instructions on converting them to the current format.
