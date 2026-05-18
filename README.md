@@ -64,7 +64,7 @@ Dependencies:
 + python 3.5+
 + pandas>=0.21.1
 + seaborn>=0.7.1
-+ matplotlib==2.1.0
++ matplotlib>=2.2.0
 + scipy>=0.17.1
 + numpy>=1.10.4
 + scikit-learn>=0.18.1
