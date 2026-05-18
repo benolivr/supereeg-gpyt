@@ -45,7 +45,7 @@ model object (ending in ``.mo``) - an existing model object (this makes
 a copy of the existing model object) - a ``Brain`` object or ``Nifti``
 object [or paths to saved ``Brain`` objects (.bo) or ``Nifti`` objects
 (.nii)] - a string corresponding to any of the `built-in example
-files <http://supereeg.readthedocs.io/en/latest/supereeg.load.html#supereeg.load>`__,
+files <https://supereeg-gpyt.readthedocs.io/en/latest/supereeg.load.html#supereeg.load>`__,
 of any format (any datatype may be converted to a ``Model`` object)
 
 In addition, new model objects may be created via the ``load`` function

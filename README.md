@@ -8,7 +8,7 @@ The way the technique works is to leverage data from different patients' brains 
 
 Although our toolbox is designed with ECoG data in mind, in theory this tool could be applied to a very general set of applications.  The general problem we solve is: given known (correlational) structure of a large number of "features," and given that (at any one time) you only observe some of those features, how much can you infer about what the remaining features are doing?
 
-Toolbox documentation, including a full API specification, tutorials, and gallery of examples may be found [here](http://supereeg.readthedocs.io/) on our readthedocs page.
+Toolbox documentation, including a full API specification, tutorials, and gallery of examples may be found [here](https://supereeg-gpyt.readthedocs.io/) on our readthedocs page.
 
 <h2>Installation</h2>
 
