@@ -50,6 +50,15 @@ Simulations
   simulate_bo
   create_cov
 
+Filtering
+------------------
+
+.. autosummary::
+  :toctree:
+
+  filter_elecs
+  filter_subj
+
 Helpers
 ------------------
 

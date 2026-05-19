@@ -344,6 +344,11 @@ Gallery of Examples
    :hidden:
 
    /auto_examples/model_add_subtract
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/debug_predict
 .. raw:: html
 
     <div style='clear:both'></div>

@@ -9,6 +9,6 @@ from .nifti import Nifti
 from .location import Location
 from .load import load, migrate_deepdish
 from .simulate import *
-from .helpers import tal2mni
+from .helpers import tal2mni, filter_elecs, filter_subj
 from .kernel import blur
 

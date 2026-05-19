@@ -3,9 +3,9 @@
 .. _sphx_glr_auto_examples_plot_update_model.py:
 
 
-=============================
+=====================================================================
 Create a model from scratch, and then update it with new subject data
-=============================
+=====================================================================
 
 In this example, we will simulate a model and update the model with the new data.
 First, we'll load in some example locations. Then, we will simulate

@@ -454,6 +454,7 @@ This example shows debugging process for predict.  Delete before pip push.
     corr_vals = _corr_column(actual_data, recon_data)
 
     print('case 4 (model subset of brain locs) correlation = ' +str(corr_vals.mean()))
+
 **Total running time of the script:** ( 0 minutes  0.000 seconds)
 
 

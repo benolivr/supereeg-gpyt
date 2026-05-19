@@ -27,6 +27,10 @@ nbsphinx_allow_errors = False
 autosummary_generate = True
 autosummary_generate_overwrite = True
 
+# numpydoc: don't generate per-method toctree entries (avoids "stub file not
+# found" warnings for inherited/private methods that have no standalone page)
+numpydoc_class_members_toctree = False
+
 templates_path = ['_templates']
 source_suffix = '.rst'
 master_doc = 'index'

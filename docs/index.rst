@@ -8,8 +8,11 @@
    :maxdepth: 2
    :caption: Contents
 
+   quickstart
    tutorial
+   methodology
    api
+   changelog
    auto_examples/index
    migration
 
