@@ -1,6 +1,7 @@
 import supereeg as se
 import numpy as np
 import pandas as pd
+import pytest
 from scipy.stats import zscore
 from supereeg.helpers import _corr_column
 
@@ -91,6 +92,10 @@ def test_simulate_model_data_distance():
     assert isinstance(data, np.ndarray)
     assert isinstance(sub_locs, pd.DataFrame)
 
+@pytest.mark.filterwarnings(
+    "ignore:covariance is not symmetric positive-semidefinite:RuntimeWarning")
+# we ignore this beacuse the eigenvalues can be very slightly negative due to floating point precision
+# numpy silently fixes it after the warning anyways
 def test_simulate_model_data_distance_no_sample_locs():
     data, sub_locs = se.simulate_model_data(n_samples=10, locs=locs, cov='distance')
     assert isinstance(data, np.ndarray)

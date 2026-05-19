@@ -1445,7 +1445,7 @@ def _plot_locs_connectome(locs, label=None, pdfpath=None):
 
     """
     if locs.empty:
-        ni_plt.plot_connectome(np.eye(locs.shape[0]), locs)
+        ni_plt.plot_connectome(np.eye(locs.shape[0]), locs, colorbar=False)
     else:
 
         if label is not None:
@@ -1464,7 +1464,7 @@ def _plot_locs_connectome(locs, label=None, pdfpath=None):
             colors = 'k'
         ni_plt.plot_connectome(np.eye(locs.shape[0]), locs, output_file=pdfpath,
                                node_kwargs={'alpha': 0.5, 'edgecolors': None},
-                               node_size=10, node_color=colors)
+                               node_size=10, node_color=colors, colorbar=False)
     if not pdfpath:
         ni_plt.show()
 

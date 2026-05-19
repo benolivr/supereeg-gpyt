@@ -81,14 +81,18 @@ def test_kurt_vals():
     kurts_2 = _kurt_vals(data[0])
     assert isinstance(kurts_2, np.ndarray)
 
-#NOTE: This test won't run because apply_by_file_index calls the kurtosis, but kurtosis doesnt support brain objects
-# def test_kurt_vals_compare():
-#     def aggregate(prev, next):
-#         return np.max(np.vstack((prev, next)), axis=0)
-#
-#     kurts_1 = _apply_by_file_index(data[0], kurtosis, aggregate)
-#     kurts_2 = _kurt_vals(data[0])
-#     assert np.allclose(kurts_1, kurts_2)
+def test_kurt_vals_compare():
+    # _apply_by_file_index passes a Brain object to the xform function, so we
+    # must extract .data.values before calling scipy's kurtosis.
+    def aggregate(prev, next_val):
+        return np.max(np.vstack((prev, next_val)), axis=0)
+
+    def kurtosis_xform(bo):
+        return kurtosis(bo.data.values)
+
+    kurts_1 = _apply_by_file_index(data[0], kurtosis_xform, aggregate)
+    kurts_2 = _kurt_vals(data[0])
+    assert np.allclose(kurts_1, kurts_2)
 
 def test_logsubexp():
     b_try = _to_exp_real(_logsubexp(c_log, a_log))
@@ -119,11 +123,11 @@ def test_array_z2r():
     assert isinstance(test_fun, np.ndarray)
     assert np.allclose(test_val, test_fun)
 
-def _r2z_z2r():
+def test_r2z_z2r():
     z = np.array([1, 2, 3])
     test_fun = _r2z(_z2r(z))
     assert isinstance(test_fun, (int, np.ndarray))
-    assert z == test_fun
+    assert np.allclose(z, test_fun)
 
 def test_int_r2z():
     r = .1

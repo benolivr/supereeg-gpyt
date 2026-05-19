@@ -250,6 +250,26 @@ class Nifti(Nifti1Image):
         bo = Brain(self)
         return bo.get_locs()
 
+    def to_bo(self):
+        """
+        Convert this Nifti to a Brain object.
+
+        Returns
+        -------
+        bo : supereeg.Brain
+        """
+        return Brain(self)
+
+    def to_mo(self):
+        """
+        Convert this Nifti to a Model object.
+
+        Returns
+        -------
+        mo : supereeg.Model
+        """
+        from .model import Model
+        return Model(Brain(self))
 
     def save(self, filepath):
         """

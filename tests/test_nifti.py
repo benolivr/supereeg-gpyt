@@ -50,10 +50,10 @@ def test_nifti_str():
     nii = se.Nifti('std')
     assert isinstance(nii, se.Nifti)
 
-# def test_nifti_to_bo():
-#     bo = nii.to_bo()
-#     assert isinstance(bo, se.Brain)
-#
-# def test_nifti_to_mo():
-#     mo = nii.to_mo()
-#     assert isinstance(mo, se.Model)
+def test_nifti_to_bo():
+    bo = nii.to_bo()
+    assert isinstance(bo, se.Brain)
+
+def test_nifti_to_mo():
+    mo = nii.to_mo()
+    assert isinstance(mo, se.Model)

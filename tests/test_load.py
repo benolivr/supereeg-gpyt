@@ -87,29 +87,23 @@ def test_return_type_mo_with_bo():
     mo = se.load('example_data', return_type='mo')
     assert isinstance(mo, se.Model)
 
-#TODO: COMMENTING OUT UNTIL EXAMPLE_MODEL IS REBUILT WITH NEW REFACTOR
-#def test_return_type_mo_with_mo():
-#    mo = se.load('example_model', return_type='mo')
-#    assert isinstance(mo, se.Model)
+def test_return_type_mo_with_mo():
+    mo = se.load('example_model', return_type='mo')
+    assert isinstance(mo, se.Model)
 
-# # passes nbut test takes a lot longer (like 10 seconds)
-# def test_return_type_mo_with_nii():
-#     mo = se.load('example_nifti', return_type='mo')
-#     assert isinstance(mo, se.Model)
+def test_return_type_mo_with_nii():
+    mo = se.load('example_nifti', return_type='mo')
+    assert isinstance(mo, se.Model)
 
-# passes
+def test_return_type_nii_with_bo():
+    # Use a small 3-sample slice to avoid allocating a multi-GB nifti volume
+    # (example_data has 5000 time points which requires ~33 GiB for a full brain nifti).
+    nii = se.Nifti(bo_s)
+    assert isinstance(nii, se.Nifti)
 
-#TODO: MEMORY ERROR WITH TRAVIS BUILD, MAKE SMALLER BRAIN OBJECT FOR TEST LOAD
-# def test_return_type_nii_with_bo():
-#
-#     nii = se.load('example_data', return_type='nii')
-#     assert isinstance(nii, se.Nifti)
-
-# passes
-#TODO: COMMENTING OUT UNTIL EXAMPLE_MODEL IS REBUILT WITH NEW REFACTOR
-#def test_return_type_nii_with_mo():
-    #nii = se.load('example_model', return_type='nii')
-    #assert isinstance(nii, se.Nifti)
+def test_return_type_nii_with_mo():
+    nii = se.load('example_model', return_type='nii')
+    assert isinstance(nii, se.Nifti)
 
 # passes
 def test_return_type_nii_with_nii():
