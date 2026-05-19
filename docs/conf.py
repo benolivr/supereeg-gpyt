@@ -23,8 +23,9 @@ extensions = [
 nbsphinx_execute = 'never'
 nbsphinx_allow_errors = False
 
-# Generate API stubs
+# Generate API stubs (overwrite stale ones on each build)
 autosummary_generate = True
+autosummary_generate_overwrite = True
 
 templates_path = ['_templates']
 source_suffix = '.rst'
@@ -38,7 +39,17 @@ version = u'0.2'
 release = u'0.2.1'
 
 language = 'en'
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = [
+    '_build', 'Thumbs.db', '.DS_Store',
+    # auto_examples: the pre-generated .rst files are canonical; exclude the
+    # sphinx-gallery source files so Sphinx doesn't see duplicate documents.
+    'auto_examples/*.py',
+    'auto_examples/*.ipynb',
+    'auto_examples/*.py.md5',
+    # tutorial: the pre-generated .rst stubs are the canonical source; exclude
+    # the raw .ipynb files so Sphinx doesn't try to process them as documents.
+    'tutorial/*.ipynb',
+]
 pygments_style = 'sphinx'
 todo_include_todos = False
 

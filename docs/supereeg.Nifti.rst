@@ -45,9 +45,11 @@
       ~Nifti.set_filename
       ~Nifti.set_qform
       ~Nifti.set_sform
+      ~Nifti.to_bo
       ~Nifti.to_bytes
       ~Nifti.to_file_map
       ~Nifti.to_filename
+      ~Nifti.to_mo
       ~Nifti.to_stream
       ~Nifti.uncache
       ~Nifti.update_header

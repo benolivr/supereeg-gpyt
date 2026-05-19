@@ -1,5 +1,3 @@
-:orphan:
-
 .. _api_ref:
 
 .. currentmodule:: supereeg

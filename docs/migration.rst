@@ -1,5 +1,3 @@
-:orphan:
-
 .. _migration:
 
 Migrating legacy files

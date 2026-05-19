@@ -13,7 +13,7 @@ methods.
 Load in the required libraries
 ==============================
 
-.. code:: ipython2
+.. code:: python
 
     import supereeg as se
     import numpy as np
@@ -31,7 +31,7 @@ the number of time samples with ``n_samples`` and the number of
 electrodes with ``n_elecs``. If you want further information on
 simulating data, check out the simulate tutorial!
 
-.. code:: ipython2
+.. code:: python
 
     # simulate some data
     bo_data = se.simulate_bo(n_samples=1000, sessions=2, n_elecs=10)
@@ -49,7 +49,7 @@ simulating data, check out the simulate tutorial!
 
 We’ll also simulate some electrode locations
 
-.. code:: ipython2
+.. code:: python
 
     locs = se.simulate_locations()
     print(locs)
@@ -76,14 +76,14 @@ Creating a brain object
 To construct a new brain objects, simply pass the data and locations to
 the ``Brain`` class like this:
 
-.. code:: ipython2
+.. code:: python
 
     bo = se.Brain(data=data, locs=locs, sample_rate=100)
 
 To view a summary of the contents of the brain object, you can call the
 ``info`` function:
 
-.. code:: ipython2
+.. code:: python
 
     bo.info()
 
@@ -102,7 +102,7 @@ Optionally, you can pass a ``sessions`` parameter, which is can be a
 numpy array or list the length of your data with a unique identifier for
 each session. For example:
 
-.. code:: ipython2
+.. code:: python
 
     sessions = np.array([1]*(data.shape[0]/2)+[2]*(data.shape[0]/2))
     bo = se.Brain(data=data, locs=locs, sample_rate=1000, sessions=sessions)
@@ -123,7 +123,7 @@ You can also add custom meta data to the brain object to help keep track
 of its contents. ``meta`` is a dictionary comprised of whatever you
 want:
 
-.. code:: ipython2
+.. code:: python
 
     meta = {
         'subjectID' : '123',
@@ -159,13 +159,13 @@ In addition, ``Brain`` objects may be created via ``load`` by specifying
 
 For example:
 
-.. code:: ipython2
+.. code:: python
 
     nii_bo = se.Brain('example_nifti')
 
 Or:
 
-.. code:: ipython2
+.. code:: python
 
     nii_bo = se.load('example_nifti', return_type='bo')
 
@@ -173,7 +173,7 @@ Another feature, which can be particularly useful when working with
 large files, is loading only a subfield by specifiying ``field``. For
 example, if you only want to load locations:
 
-.. code:: ipython2
+.. code:: python
 
     bo_locs = se.load('example_data', field='locs') 
 
@@ -183,7 +183,7 @@ The structure of a brain object
 Inside the brain object, the ECoG data are stored in a Pandas DataFrame
 that can be accessed with the ``get_data`` function:
 
-.. code:: ipython2
+.. code:: python
 
     bo.get_data().head()
 
@@ -297,7 +297,7 @@ that can be accessed with the ``get_data`` function:
 Similarly, the electrode locations are stored as a Pandas DataFrame, and
 can be retrieved using the ``get_locs`` method:
 
-.. code:: ipython2
+.. code:: python
 
     bo.get_locs().head()
 
@@ -368,7 +368,7 @@ can be retrieved using the ``get_locs`` method:
 
 Brain objects are iterable, so you index a brain object like this:
 
-.. code:: ipython2
+.. code:: python
 
     #return first time sample
     bo[0]
@@ -437,7 +437,7 @@ You can also pass a list of indices for either ``times`` (sample
 numbers) or ``locs`` to the ``get_slice`` method and return a subset of
 the brain object.
 
-.. code:: ipython2
+.. code:: python
 
     bo_s = bo.get_slice(sample_inds=[0,1,2], loc_inds=[0,1,2])
     bo_s.get_data()
@@ -497,7 +497,7 @@ the brain object.
 
 You can resample your data by specifying a new sample rate
 
-.. code:: ipython2
+.. code:: python
 
     bo.resample(64)
     bo.info()
@@ -515,7 +515,7 @@ You can resample your data by specifying a new sample rate
 
 You can also plot both the data and the electrode locations:
 
-.. code:: ipython2
+.. code:: python
 
     bo.plot_data()
 
@@ -524,7 +524,7 @@ You can also plot both the data and the electrode locations:
 .. image:: brain_objects_files/brain_objects_32_0.png
 
 
-.. code:: ipython2
+.. code:: python
 
     bo.plot_locs()
 
@@ -535,7 +535,7 @@ You can also plot both the data and the electrode locations:
 
 The other pieces of the brain object are listed below:
 
-.. code:: ipython2
+.. code:: python
 
     # array of session identifiers for each timepoint
     sessions = bo.sessions
@@ -574,7 +574,7 @@ There are a few other useful methods on a brain object
 
 This method will give you a summary of the brain object:
 
-.. code:: ipython2
+.. code:: python
 
     bo.info()
 
@@ -594,14 +594,14 @@ This method will give you a summary of the brain object:
 
 This method will return a filtered copy of the brain object.
 
-.. code:: ipython2
+.. code:: python
 
     bo_f = bo.apply_filter()
 
 ``bo.get_data()``
 -----------------
 
-.. code:: ipython2
+.. code:: python
 
     data_array = bo.get_data()
 
@@ -610,7 +610,7 @@ This method will return a filtered copy of the brain object.
 
 This method will return a numpy array of the zscored data:
 
-.. code:: ipython2
+.. code:: python
 
     zdata_array = bo.get_zscore_data()
 
@@ -619,7 +619,7 @@ This method will return a numpy array of the zscored data:
 
 This method will return a numpy array of the electrode locations:
 
-.. code:: ipython2
+.. code:: python
 
     locs = bo.get_locs()
 
@@ -630,7 +630,7 @@ This method allows you to slice out time and locations from the brain
 object, and returns a brain object. This can occur in place if you set
 the flag ``inplace=True``.
 
-.. code:: ipython2
+.. code:: python
 
     bo_slice = bo.get_slice(sample_inds=None, loc_inds=None, inplace=False)
 
@@ -639,7 +639,7 @@ the flag ``inplace=True``.
 
 This method allows you resample a brain object in place.
 
-.. code:: ipython2
+.. code:: python
 
     bo.resample(resample_rate=None)
 
@@ -657,7 +657,7 @@ This method allows you resample a brain object in place.
 
 This method normalizes and plots data from brain object:
 
-.. code:: ipython2
+.. code:: python
 
     bo.plot_data()
 
@@ -671,11 +671,11 @@ This method normalizes and plots data from brain object:
 
 This method plots electrode locations from brain object:
 
-.. code:: ipython2
+.. code:: python
 
     bo_f = se.load('example_filter')
 
-.. code:: ipython2
+.. code:: python
 
     bo_f.plot_locs()
 
@@ -693,7 +693,7 @@ the nifti file will be saved. You can also specify a nifti template with
 the ``template`` argument. If no template is specified, it will use the
 gray matter masked MNI 152 brain downsampled to 6mm.
 
-.. code:: ipython2
+.. code:: python
 
     # convert to nifti
     nii = bo.to_nii(template='gray', vox_size=6)
@@ -720,6 +720,6 @@ The data will be saved as a ‘bo’ file, which is a dictionary containing
 the elements of a brain object saved in the hd5 format using
 ``deepdish``.
 
-.. code:: ipython2
+.. code:: python
 
     #bo.save(fname='brain_object')

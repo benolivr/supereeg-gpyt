@@ -13,7 +13,7 @@ package and make a new model from scratch.
 Load in the required libraries
 ==============================
 
-.. code:: ipython2
+.. code:: python
 
     import warnings 
     warnings.simplefilter("ignore")
@@ -26,7 +26,7 @@ from the `pyFR
 dataset <http://memory.psych.upenn.edu/Request_EEG_access?paper=SedeEtal03>`__
 resampled to 20mm cubic voxels.
 
-.. code:: ipython2
+.. code:: python
 
     model = se.load('example_model')
 
@@ -52,13 +52,13 @@ In addition, new model objects may be created via the ``load`` function
 (which loads any of the toolbox-supported data types) and specifying
 ``return_type='mo'``
 
-.. code:: ipython2
+.. code:: python
 
     nii_mo = se.Model('example_nifti')
 
 Or:
 
-.. code:: ipython2
+.. code:: python
 
     nii_mo = se.load('example_nifti', return_type='mo')
 
@@ -72,7 +72,7 @@ There are a few other useful methods on a model object:
 
 This method will give you a summary of the model object:
 
-.. code:: ipython2
+.. code:: python
 
     model.info()
 
@@ -100,7 +100,7 @@ method. This method wraps ``seaborn.heatmap`` to plot the model
 (transformed from z to r), so any arguments that ``seaborn.heatmap``
 accepts are supported by ``model.plot``.
 
-.. code:: ipython2
+.. code:: python
 
     model.plot_data(xticklabels=False, yticklabels=False)
 
@@ -122,7 +122,7 @@ accepts are supported by ``model.plot``.
 
 This method will plot the locations in your model.
 
-.. code:: ipython2
+.. code:: python
 
     model.plot_locs()
 
@@ -139,7 +139,7 @@ This method allows you to update the model with addition subject data.
 To do this, we can use the ``update`` method, passing a new subjects
 data as a brain object. First, let’s load in an example subjects data:
 
-.. code:: ipython2
+.. code:: python
 
     bo = se.load('example_data')
     bo.info()
@@ -159,7 +159,7 @@ Now you can update the model with that brain object. This can be done
 either in place using ``inplace = True``, or you can save a new updated
 model:
 
-.. code:: ipython2
+.. code:: python
 
     updated_model = model.update(bo, inplace=False)
     updated_model.info()
@@ -176,13 +176,13 @@ model:
 
 You can also update the model by adding two model objects together.
 
-.. code:: ipython2
+.. code:: python
 
     mo_bo = se.Model(bo, locs=updated_model.get_locs(), n_subs=1)
     mo_mo = se.Model(model, locs=updated_model.get_locs(), n_subs=67)
     added_model = mo_mo + mo_bo
 
-.. code:: ipython2
+.. code:: python
 
     np.allclose(added_model.get_model(), updated_model.get_model())
 
@@ -198,14 +198,14 @@ You can also update the model by adding two model objects together.
 You can subtract models too, but once this operation is performed, you
 won’t be able to update the model in the future.
 
-.. code:: ipython2
+.. code:: python
 
     new_locs = se.simulate_locations(n_elecs=100)
     mo_bo = se.Model(bo, locs=new_locs, n_subs=1)
     add_model = mo_bo + mo_bo
     sub_model = add_model - mo_bo
 
-.. code:: ipython2
+.. code:: python
 
     np.allclose(mo_bo.get_model(), sub_model.get_model())
 
@@ -218,7 +218,7 @@ won’t be able to update the model in the future.
 
 
 
-.. code:: ipython2
+.. code:: python
 
     try:
         assert sub_model + add_model
@@ -233,7 +233,7 @@ before we updated it.
 
 This method returns the model in the form of a correlation matrix.
 
-.. code:: ipython2
+.. code:: python
 
     updated_model.get_model()
 
@@ -266,7 +266,7 @@ The data will be saved as a ‘bo’ file, which is a dictionary containing
 the elements of a brain object saved in the hd5 format using
 ``deepdish``.
 
-.. code:: ipython2
+.. code:: python
 
     #mo.save(fname='model_object')
 
@@ -288,7 +288,7 @@ the toolbox, we will generate a synthetic ECoG dataset. Specifically,
 we’ll simulate data from 100 locations from each of 10 subjects and
 construct the model from that data:
 
-.. code:: ipython2
+.. code:: python
 
     # simulate 100 locations
     locs = se.simulate_locations(100)
@@ -316,7 +316,7 @@ As you can see above, each simulated subject has 10 (randomly placed)
 these brain objects, simply pass them to the ``se.Model`` class, and a
 new model will be generated:
 
-.. code:: ipython2
+.. code:: python
 
     new_model = se.Model(data=model_bos, locs=locs)
     new_model.info()
@@ -355,7 +355,7 @@ You can also create a custom covariance matrix in ``se.create_cov`` by
 simply passing numpy array as and that is number of locations by number
 of locations to ``cov`` and the number of location to ``n_elecs``.
 
-.. code:: ipython2
+.. code:: python
 
     R = se.create_cov(cov='toeplitz', n_elecs=len(locs))
     p = 10
@@ -378,7 +378,7 @@ of locations to ``cov`` and the number of location to ``n_elecs``.
 In this example we simulated 100 MNI locations. However coordinates can
 also be derived by specifiying a ``template`` nifti file.
 
-.. code:: ipython2
+.. code:: python
 
     # new_model = se.Model(bos, template='/your/custom/MNI_template.nii')
 
@@ -409,7 +409,7 @@ As default, the model is not updated with the subject’s correlation
 matrix. By setting ``force_update`` to ``True``, you will update the
 model with the subject’s correlation matrix.
 
-.. code:: ipython2
+.. code:: python
 
     # plot a slice of the original data
     print('BEFORE')
@@ -468,7 +468,7 @@ activity from a smaller sample of electrodes.
 You can plot locations of the new brain object with predicted activity.
 Observed locations are in black and predicted locations are in red.
 
-.. code:: ipython2
+.. code:: python
 
     bor.plot_locs()
 
