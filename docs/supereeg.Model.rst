@@ -19,6 +19,7 @@
       ~Model.get_slice
       ~Model.info
       ~Model.plot_data
+      ~Model.plot_data_scaled
       ~Model.plot_locs
       ~Model.predict
       ~Model.save

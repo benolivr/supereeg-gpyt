@@ -116,22 +116,23 @@ class Nifti(Nifti1Image):
 
 
         """
+        base = Nifti1Image(np.asarray(self.dataobj), self.affine, self.header)
         if len(self.shape)>3:
 
             if self.shape[3]>1:
 
                 if hasattr(type(index), "__iter__"):
                     for i in index:
-                        nii = index_img(self, i)
+                        nii = index_img(base, i)
                         ni_plt.plot_anat(nii, output_file=pdfpath)
                 else:
-                    nii = index_img(self, index)
+                    nii = index_img(base, index)
                     ni_plt.plot_anat(nii, output_file=pdfpath)
 
             else:
-                ni_plt.plot_anat(self, output_file=pdfpath)
+                ni_plt.plot_anat(base, output_file=pdfpath)
         else:
-            ni_plt.plot_anat(self, output_file=pdfpath)
+            ni_plt.plot_anat(base, output_file=pdfpath)
 
         if not pdfpath:
             ni_plt.show()
@@ -160,19 +161,20 @@ class Nifti(Nifti1Image):
 
 
         """
+        base = Nifti1Image(np.asarray(self.dataobj), self.affine, self.header)
         if len(self.shape)>3:
 
             if self.shape[3] > 1:
 
                 if hasattr(type(index), "__iter__"):
                     for i in index:
-                        nii = index_img(self, i)
+                        nii = index_img(base, i)
                         ni_plt.plot_glass_brain(nii, output_file=pdfpath)
                 else:
-                    nii = index_img(self, index)
+                    nii = index_img(base, index)
                     ni_plt.plot_glass_brain(nii, output_file=pdfpath)
             else:
-                ni_plt.plot_glass_brain(self, output_file=pdfpath)
+                ni_plt.plot_glass_brain(base, output_file=pdfpath)
 
         if not pdfpath:
             ni_plt.show()

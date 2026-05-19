@@ -223,12 +223,12 @@ def _get_corrmat(bo):
         return p + n
 
     def zcorr_xform(bo):
-        return np.multiply(bo.dur, _r2z(1 - squareform(pdist(bo.get_data().T, 'correlation'))))
+        return _r2z(1 - squareform(pdist(bo.get_data().T, 'correlation')))
 
     summed_zcorrs = _apply_by_file_index(bo, zcorr_xform, aggregate)
 
-    #weight each session by recording time
-    return _z2r(summed_zcorrs / np.sum(bo.dur))
+    n_sessions = len(bo.sessions.unique())
+    return _z2r(summed_zcorrs / n_sessions)
 
 
 def _z_score(bo):

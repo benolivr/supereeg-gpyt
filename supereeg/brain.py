@@ -432,7 +432,7 @@ class Brain(object):
             ax.set_xlabel("time")
             ax.set_ylabel("electrode")
             if filepath:
-                plt.savefig(filename=filepath)
+                plt.savefig(filepath)
             else:
                 plt.show()
         else:
@@ -472,7 +472,7 @@ class Brain(object):
             ax.set_ylabel("electrode")
 
             if filepath:
-                plt.savefig(filename=filepath)
+                plt.savefig(filepath)
             else:
                 plt.show()
 
