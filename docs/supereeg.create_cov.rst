@@ -1,5 +1,5 @@
-supereeg\.create\_cov
-=====================
+﻿supereeg.create\_cov
+====================
 
 .. currentmodule:: supereeg
 

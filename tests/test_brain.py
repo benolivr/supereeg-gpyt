@@ -1,4 +1,3 @@
-from builtins import str
 import pytest
 import os
 import supereeg as se
@@ -108,17 +107,35 @@ def test_brain_filter():
     assert bo.get_data().shape==(10,2)
     assert bo.get_locs().shape==(2,3)
 
-## can't get tests for plots to work
+import matplotlib
+import matplotlib.pyplot as plt
 
-# def test_bo_plot_locs(tmpdir):
-#     p = tmpdir.mkdir("sub").join("example")
-#     fig = bo.plot_locs(pdfpath=str(p))
-#     assert os.path.exists(os.path.join(str(p), '.pdf'))
-#     assert isinstance(fig, plt.Figure)
-#
-#
-# def test_bo_plot_data(tmpdir):
-#     p = tmpdir.mkdir("sub").join("example")
-#     fig = bo.plot_data(filepath=str(p))
-#     assert os.path.exists(os.path.join(str(p), '.png'))
-#     assert isinstance(fig, plt.Figure)
+def test_bo_plot_data():
+    # Smoke test: plot_data should not raise.  The Agg backend is set in
+    # conftest.py so this works in headless CI environments.
+    # plt.show() emits a UserWarning in non-interactive mode; that is expected.
+    import warnings
+    bo_tmp = se.simulate_bo(n_samples=10, sample_rate=100)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        bo_tmp.plot_data()      # exercises the normal (multi-sample) path
+    plt.close('all')
+
+def test_bo_plot_locs(tmpdir):
+    # Smoke test: plot_locs should not raise.
+    # nilearn 0.13+ added colorbar=True as default to plot_connectome, which
+    # requires a .cmap attribute that GlassBrainAxes doesn't expose when only
+    # nodes (no edge colormap) are drawn.  Fixed by passing colorbar=False.
+    import warnings
+    bo_tmp = se.simulate_bo(n_samples=10, sample_rate=100)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        bo_tmp.plot_locs()      # no file: exercises the ni_plt.show() path
+    plt.close('all')
+
+    # Also verify the save-to-file path works
+    p = tmpdir.join("locs.pdf")
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        bo_tmp.plot_locs(pdfpath=str(p))
+    assert p.exists()

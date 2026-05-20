@@ -1,4 +1,4 @@
-supereeg.load
+﻿supereeg.load
 =============
 
 .. currentmodule:: supereeg

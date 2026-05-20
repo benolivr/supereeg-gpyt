@@ -1,5 +1,5 @@
-supereeg\.tal2mni
-=================
+﻿supereeg.tal2mni
+================
 
 .. currentmodule:: supereeg
 

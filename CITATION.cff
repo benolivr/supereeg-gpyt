@@ -1,0 +1,62 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite both the software and the paper below."
+title: supereeg
+abstract: >-
+  supereeg is a Python toolbox for inferring whole-brain electrocorticographic
+  (ECoG) activity from a sparse set of implanted electrode recordings.  It
+  uses Gaussian process regression and a learned inter-electrode correlation
+  model to reconstruct high-spatiotemporal estimates of activity throughout the
+  brain.
+authors:
+  - family-names: Owen
+    given-names: Lucy L. W.
+    orcid: "https://orcid.org/0000-0003-4012-6098"
+  - family-names: Muntianu
+    given-names: Tudor A.
+  - family-names: Heusser
+    given-names: Andrew C.
+    orcid: "https://orcid.org/0000-0002-1876-9954"
+  - family-names: Daly
+    given-names: Patrick M.
+  - family-names: Scangos
+    given-names: Katherine W.
+  - family-names: Manning
+    given-names: Jeremy R.
+    orcid: "https://orcid.org/0000-0001-7613-4732"
+version: "0.2.1"
+license: MIT
+repository-code: "https://github.com/ContextLab/supereeg"
+url: "https://supereeg.readthedocs.io"
+keywords:
+  - electrocorticography
+  - ECoG
+  - Gaussian process regression
+  - brain imaging
+  - neuroscience
+  - neural reconstruction
+date-released: "2020-06-01"
+preferred-citation:
+  type: article
+  title: "A Gaussian Process Model of Human Electrocorticographic Data"
+  authors:
+    - family-names: Owen
+      given-names: Lucy L. W.
+      orcid: "https://orcid.org/0000-0003-4012-6098"
+    - family-names: Muntianu
+      given-names: Tudor A.
+    - family-names: Heusser
+      given-names: Andrew C.
+      orcid: "https://orcid.org/0000-0002-1876-9954"
+    - family-names: Daly
+      given-names: Patrick M.
+    - family-names: Scangos
+      given-names: Katherine W.
+    - family-names: Manning
+      given-names: Jeremy R.
+      orcid: "https://orcid.org/0000-0001-7613-4732"
+  journal: "Cerebral Cortex"
+  year: 2020
+  month: 6
+  issn: "1047-3211"
+  doi: "10.1093/cercor/bhaa115"
+  url: "https://doi.org/10.1093/cercor/bhaa115"

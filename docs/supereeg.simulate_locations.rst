@@ -1,5 +1,5 @@
-supereeg\.simulate\_locations
-=============================
+﻿supereeg.simulate\_locations
+============================
 
 .. currentmodule:: supereeg
 

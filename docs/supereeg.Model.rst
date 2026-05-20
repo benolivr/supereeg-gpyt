@@ -1,9 +1,9 @@
-﻿supereeg.Nifti
+﻿supereeg.Model
 ==============
 
 .. currentmodule:: supereeg
 
-.. autoclass:: Nifti
+.. autoclass:: Model
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,18 +1,15 @@
-from __future__ import division
-from __future__ import print_function
 import copy
-import deepdish as dd
+from . import hdf5 as hdf5_io
 import matplotlib.pyplot as plt
 import nibabel as nib
 import numbers
 import numpy as np
 import os
 import pandas as pd
-import six
 import time
 import warnings
 from .helpers import _kurt_vals, _normalize_Y, _vox_size, _resample, _plot_locs_connectome, \
-    _plot_locs_hyp, _std, _gray, _nifti_to_brain, _brain_to_nifti, _brain_to_nifti2, _z_score, _std
+    _plot_locs_hyp, _std, _gray, _nifti_to_brain, _brain_to_nifti, _brain_to_nifti2, _z_score
 
 class Brain(object):
     """
@@ -118,7 +115,7 @@ class Brain(object):
         from .model import Model
         from .nifti import Nifti
 
-        if isinstance(data, six.string_types):
+        if isinstance(data, str):
             data = Brain(load(data))
 
         if isinstance(data, Brain):
@@ -263,7 +260,7 @@ class Brain(object):
         try:
             index, counts = np.unique(self.sessions, return_counts=True)
             self.dur = np.true_divide(counts, np.array(self.sample_rate))
-        except:
+        except Exception:
             self.dur = None
 
     def info(self):
@@ -435,7 +432,7 @@ class Brain(object):
             ax.set_xlabel("time")
             ax.set_ylabel("electrode")
             if filepath:
-                plt.savefig(filename=filepath)
+                plt.savefig(filepath)
             else:
                 plt.show()
         else:
@@ -475,7 +472,7 @@ class Brain(object):
             ax.set_ylabel("electrode")
 
             if filepath:
-                plt.savefig(filename=filepath)
+                plt.savefig(filepath)
             else:
                 plt.show()
 
@@ -576,7 +573,7 @@ class Brain(object):
         elif type(template) is nib.nifti1.Nifti1Image:
             img = template
 
-        elif isinstance(template, str) or isinstance(template, basestring):
+        elif isinstance(template, str):
 
             if os.path.exists(template):
                 img = nib.load(template)
@@ -679,7 +676,7 @@ class Brain(object):
         elif type(template) is nib.nifti1.Nifti1Image:
             img = template
 
-        elif isinstance(template, str) or isinstance(template, basestring):
+        elif isinstance(template, str):
 
             if os.path.exists(template):
                 img = nib.load(template)
@@ -721,8 +718,8 @@ class Brain(object):
         Save method for the brain object
 
         The data will be saved as a 'bo' file, which is a dictionary containing
-        the elements of a brain object saved in the hd5 format using
-        `deepdish`.
+        the elements of a brain object saved in the HDF5 format using
+        h5py for arrays and pandas for tables.
 
         Parameters
         ----------
@@ -732,27 +729,11 @@ class Brain(object):
             it will be appended.
 
         compression : str
-            The kind of compression to use.  See the deepdish documentation for
-            options: http://deepdish.readthedocs.io/en/latest/api_io.html#deepdish.io.save
+            The kind of compression to use. "blosc" maps to gzip for h5py.
 
         """
-
-        bo = {
-            'data': self.data.values,
-            'locs': self.locs,
-            'sessions': self.sessions,
-            'sample_rate': self.sample_rate,
-            'kurtosis': self.kurtosis,
-            'kurtosis_threshold' : self.kurtosis_threshold,
-            'meta': self.meta,
-            'date_created': self.date_created,
-            'minimum_voxel_size': self.minimum_voxel_size,
-            'maximum_voxel_size': self.maximum_voxel_size,
-            'label' : self.label,
-            'filter' : self.filter,
-        }
 
         if fname[-3:] != '.bo':
             fname += '.bo'
 
-        dd.io.save(fname, bo, compression=compression)
+        hdf5_io.save_brain(self, fname, compression=compression)

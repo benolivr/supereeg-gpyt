@@ -12,7 +12,7 @@ with the Nifti class but also use other functionality such as
 Load in the required libraries
 ==============================
 
-.. code:: ipython2
+.. code:: python
 
     import warnings 
     warnings.simplefilter("ignore")
@@ -21,7 +21,7 @@ Load in the required libraries
 
 First, let’s load in an example nifti file, ``example_nifti``:
 
-.. code:: ipython2
+.. code:: python
 
     nii = se.load('example_nifti')
 
@@ -40,13 +40,13 @@ by specifying ``return_type='nii'``.
 
 For example:
 
-.. code:: ipython2
+.. code:: python
 
     bo_nii = se.Nifti('example_data')
 
 Or:
 
-.. code:: ipython2
+.. code:: python
 
     bo_nii = se.load('example_data', return_type='nii')
 
@@ -58,7 +58,7 @@ using the ``vox_size`` argument. The voxel sizes may be specified either
 as a scalar (for cubic voxels) or as a 3D tuple (for rectangular prism
 or parallelopiped voxels):
 
-.. code:: ipython2
+.. code:: python
 
     bo_nii = se.Nifti('example_data', vox_size=6)
 
@@ -72,7 +72,7 @@ Some useful methods on a nifti object:
 
 This method will give you a summary of the nifti object:
 
-.. code:: ipython2
+.. code:: python
 
     nii.info()
 
@@ -131,7 +131,7 @@ This method will give you a summary of the nifti object:
 This method allows you to slice out images from your nifti object, and
 returns the indexed nifti.
 
-.. code:: ipython2
+.. code:: python
 
     nii_sliced = bo_nii.get_slice(index=[0,1,2])
 
@@ -144,7 +144,7 @@ This method wraps ``nilearn.plot_glass_brain`` to plot the nifti object,
 so any arguments that ``nilearn.plot_glass_brain`` accepts are supported
 by ``nifti.plot_glass_brain``.
 
-.. code:: ipython2
+.. code:: python
 
     nii_sliced.plot_glass_brain()
 
@@ -162,7 +162,7 @@ This method wraps ``nilearn.plot_anat`` to plot the nifti object, so any
 arguments that ``nilearn.plot_anat`` accepts are supported by
 ``nifti.anat``. For example, you can plot the example nifti:
 
-.. code:: ipython2
+.. code:: python
 
     nii.plot_anat()
 
@@ -181,7 +181,7 @@ This method wraps ``nilearn.plot_glass_brain`` to plot the nifti object,
 so any arguments that ``nilearn.plot_glass_brain`` accepts are supported
 by ``nifti.plot_glass_brain``.
 
-.. code:: ipython2
+.. code:: python
 
     #nii.make_gif(gifpath='/path/to/save/gif', index=range(0, 10), name=None, **kwargs)
 
@@ -191,6 +191,6 @@ by ``nifti.plot_glass_brain``.
 This method will save your nifti object to the specified filepath
 location as a ‘nii’ file.
 
-.. code:: ipython2
+.. code:: python
 
     #nii.save(filepath='/path/to/save/nifti')

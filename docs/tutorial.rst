@@ -1,38 +1,15 @@
-:orphan:
-
 .. _tutorial:
 
 How to use the supereeg package
-================
+================================
 
-Introduction to `Brain` objects
-----------------
-
-.. toctree::
-   :maxdepth: 2
-
-   tutorial/brain_objects.ipynb
-
-`Model` objects and predicting activity
-------------------
+The tutorials below walk through the main supereeg data structures and
+workflows.  Each tutorial is a runnable Jupyter notebook.
 
 .. toctree::
    :maxdepth: 2
 
-   tutorial/model_objects.ipynb
-
-`Nifti` objects
-------------------
-
-.. toctree::
-   :maxdepth: 2
-
-   tutorial/nifti_objects.ipynb
-
-Simulations
-------------------
-
-.. toctree::
-   :maxdepth: 2
-
-   tutorial/simulate_objects.ipynb
+   tutorial/brain_objects
+   tutorial/model_objects
+   tutorial/nifti_objects
+   tutorial/simulate_objects

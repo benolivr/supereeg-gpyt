@@ -10,7 +10,7 @@ simulate functions and explore varying parameters.
 Load in the required libraries
 ==============================
 
-.. code:: ipython2
+.. code:: python
 
     %matplotlib inline
     import supereeg as se
@@ -25,7 +25,7 @@ Simulate locations
 
 To begin, we can either simulate locations:
 
-.. code:: ipython2
+.. code:: python
 
     sim_locs = se.simulate_locations()
     sim_locs.head()
@@ -109,7 +109,7 @@ with ``n_samples``, sessions with ``sessions``, and the number of
 electrodes with ``n_elecs`` or by passing specific electrodes with
 ``locs``.
 
-.. code:: ipython2
+.. code:: python
 
     # simulate brain object with example locations
     bo = se.simulate_bo(n_samples=1000, sample_rate=100, sessions=2)
@@ -117,7 +117,7 @@ electrodes with ``n_elecs`` or by passing specific electrodes with
 You can view your simulated data with ``bo.plot_data`` and simulated
 locations with ``bo.plot_locs``.
 
-.. code:: ipython2
+.. code:: python
 
     # for plotting data, the default time window is first 10 seconds, but you can specifiy your own window
     bo.plot_data(time_min=5, time_max=10)
@@ -130,7 +130,7 @@ locations with ``bo.plot_locs``.
 .. image:: simulate_objects_files/simulate_objects_12_0.png
 
 
-.. code:: ipython2
+.. code:: python
 
     # plot locations
     bo.plot_locs()
@@ -147,7 +147,7 @@ We’ve added a ``random_seed=False`` and ``noise=.1`` parameters as
 defaults. But if you want to recreate the same brain object, you can set
 these flags to: ``random_seed=True`` and ``noise=0``
 
-.. code:: ipython2
+.. code:: python
 
     # if you want to simulate the same brain object again
     bo_1 = se.simulate_bo(n_samples=1000, sessions=2, n_elecs=5, random_seed=True, noise=0).get_data()
@@ -179,7 +179,7 @@ include:
 
 ``'random'`` - positive semi-definite random matrix
 
-.. code:: ipython2
+.. code:: python
 
     # simulate more locations
     locs = se.simulate_locations(n_elecs=100)
@@ -189,7 +189,7 @@ include:
 
 You can also pass a custom covariance matrix in ``cov``.
 
-.. code:: ipython2
+.. code:: python
 
     # create correlation matrix
     R = se.create_cov(cov='toeplitz', n_elecs=len(locs))
@@ -206,7 +206,7 @@ Simulate model object
 You can create a simulated model object by passing a list of simulated
 brain objects.
 
-.. code:: ipython2
+.. code:: python
 
     # number of subjects 
     n_sub = 5
@@ -238,7 +238,7 @@ number of subjects and number of randomly chosen electrodes and plot the
 model at each iteration. As the figure shows, the more subjects and
 electrodes, the better then recovery of the true model.
 
-.. code:: ipython2
+.. code:: python
 
     # n_samples
     n_samples = 100
@@ -298,7 +298,7 @@ updated model is plotted. As is apparent from the figures, the more data
 in the model, the better the true correlational structure can be
 recovered.
 
-.. code:: ipython2
+.. code:: python
 
     # number of subjects
     n_subs = 10
@@ -377,7 +377,7 @@ model
 As the figure shows, the more subjects and electrodes, the better then
 recovery of the true model.
 
-.. code:: ipython2
+.. code:: python
 
     # n_electrodes - number of electrodes for reconstructed patient
     n_elecs = range(10, 100, 50)
@@ -473,7 +473,7 @@ recovery of the true model.
 
 Simulations run on the cluster:
 
-.. code:: ipython2
+.. code:: python
 
     from IPython.display import Image
     Image("simulation_for_nb.png")

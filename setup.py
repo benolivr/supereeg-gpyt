@@ -16,7 +16,8 @@ setup(
     url='https://www.context-lab.com',
     license=LICENSE,
     install_requires=[
-        'deepdish',
+        'h5py',
+        'tables',
         'scikit-learn>=0.18.1',
         'pandas>=0.23.4',
         'seaborn>=0.7.1',
@@ -32,5 +33,10 @@ setup(
         'six',
         'scikit-image'
     ],
+    entry_points={
+        'console_scripts': [
+            'supereeg-migrate=supereeg.cli:main',
+        ]
+    },
     packages=find_packages(exclude=('tests', 'docs')),
 )

@@ -3,9 +3,9 @@
 .. _sphx_glr_auto_examples_tal_to_mni.py:
 
 
-=============================
+===================================
 Convert from talairach to MNI space
-=============================
+===================================
 
 This example converts electrodes locations from talairach to MNI space.
 

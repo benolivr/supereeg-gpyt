@@ -1,5 +1,5 @@
-supereeg\.filter\_elecs
-=======================
+﻿supereeg.filter\_elecs
+======================
 
 .. currentmodule:: supereeg
 

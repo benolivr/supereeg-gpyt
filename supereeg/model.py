@@ -1,13 +1,10 @@
-from __future__ import division
-from __future__ import print_function
 import time
 import copy
 import warnings
-import six
 import pandas as pd
 import numpy as np
 import seaborn as sns
-import deepdish as dd
+from . import hdf5 as hdf5_io
 import matplotlib.pyplot as plt
 from .helpers import _get_corrmat, _r2z, _z2r, _log_rbf, _blur_corrmat, _plot_borderless,\
     _near_neighbor, _timeseries_recon, _count_overlapping, _plot_locs_connectome, \
@@ -137,7 +134,7 @@ class Model(object):
                                           rbf_width=self.rbf_width, n_subs=1,
                                           gpu=self.gpu))
 
-            if isinstance(data, six.string_types):
+            if isinstance(data, str):
                 data = load(data)
 
             if isinstance(data, Nifti):
@@ -188,7 +185,7 @@ class Model(object):
         if not (template is None): #blur correlation matrix out to template locations
             if not (locs is None):
                 warnings.warn('Argument ''locs'' will be ignored in favor of the provided Nifti template')
-            if isinstance(template, six.string_types):
+            if isinstance(template, str):
                 template = load(template)
             assert type(template) == Nifti, 'template must be a Nifti object or a path to a Nifti object'
             bo = Brain(template)
@@ -333,7 +330,12 @@ class Model(object):
         Returns
         ----------
         bo_p : supereeg.Brain
-            New brain data object with missing electrode locations filled in
+            New brain data object with missing electrode locations filled in.
+            Observed electrode columns retain their original z-scored amplitudes (std≈1). Reconstructed electrode 
+            columns will have lower amplitude (std<1) because Gaussian process regression is a smoother, so it 
+            integrates information across spatially distributed electrodes via the learned correlation structure, 
+            which naturally attenuates variance. This attenuation is real and reflects reconstruction uncertainty,
+            it is not corrected post-hoc so that downstream analyses can account for it.
         """
 
         if not isinstance(bo, Brain):
@@ -446,13 +448,16 @@ class Model(object):
 
     def plot_data(self, savefile=None, show=True, **kwargs):
         """
-        Plot the supereeg model as a correlation matrix
-        This function wraps seaborn's heatmap and accepts any inputs that seaborn
-        supports for models less than 2000x2000.  If the model is larger, the plot cannot be
-        generated without specifying a savefile.
+        Plot the supereeg model as a correlation matrix with a fixed 0-1 colorbar scale.
+
+        Shows absolute correlation strength. Use plot_data_scaled() to reveal
+        internal structure by stretching the colorbar to the data's actual range.
 
         Parameters
         ----------
+        savefile : str or None
+            Path to save the figure. Required for models larger than 2000x2000.
+
         show : bool
             If False, image not rendered (default : True)
 
@@ -465,12 +470,66 @@ class Model(object):
         corr_mat = self.get_model(z_transform=False)
 
         if np.shape(corr_mat)[0] < 2000:
-            ax = sns.heatmap(corr_mat, cbar_kws = {'label': 'correlation'}, **kwargs)
+            ax = sns.heatmap(corr_mat, cmap='turbo', vmin=0, vmax=1,
+                             cbar_kws={'label': 'correlation'}, **kwargs)
         else:
-            if savefile == None:
+            if savefile is None:
                 raise NotImplementedError('Cannot plot large models when savefile is None')
             else:
-                ax = _plot_borderless(corr_mat, savefile=savefile, vmin=-1, vmax=1, cmap='Spectral')
+                ax = _plot_borderless(corr_mat, savefile=savefile, vmin=0, vmax=1, cmap='turbo')
+        if show:
+            plt.show()
+
+        return ax
+
+    def plot_data_scaled(self, savefile=None, show=True, sort=True, n_clusters=7, **kwargs):
+        """
+        Plot the supereeg model as a correlation matrix scaled to the data's min-max range.
+
+        Rows and columns are sorted by k-means cluster membership by default (sort=True),
+        matching the presentation in Owen et al. 2020 and making block structure visible.
+        The colorbar runs 0-1 with white centered at the mean correlation, so deviations
+        in both directions are immediately readable.
+
+        Parameters
+        ----------
+        savefile : str or None
+            Path to save the figure. Required for models larger than 2000x2000.
+
+        show : bool
+            If False, image not rendered (default : True)
+
+        sort : bool
+            If True (default), sort rows/columns by k-means cluster label before plotting.
+
+        n_clusters : int
+            Number of k-means clusters used when sort=True (default: 7, matching the paper).
+
+        Returns
+        ----------
+        ax : matplotlib.Axes
+            An axes object
+        """
+        from sklearn.cluster import KMeans
+
+        corr_mat = self.get_model(z_transform=False)
+        center = float(np.nanmean(corr_mat))
+
+        if sort:
+            km = KMeans(n_clusters=n_clusters, n_init=10, random_state=0)
+            labels = km.fit_predict(corr_mat)
+            order = np.argsort(labels)
+            corr_mat = corr_mat[np.ix_(order, order)]
+
+        if np.shape(corr_mat)[0] < 2000:
+            ax = sns.heatmap(corr_mat, cmap='RdBu_r', vmin=0, vmax=1, center=center,
+                             cbar_kws={'label': 'correlation'}, **kwargs)
+        else:
+            if savefile is None:
+                raise NotImplementedError('Cannot plot large models when savefile is None')
+            else:
+                ax = _plot_borderless(corr_mat, savefile=savefile, vmin=0, vmax=1,
+                                      cmap='RdBu_r')
         if show:
             plt.show()
 
@@ -488,7 +547,7 @@ class Model(object):
 
         locs = self.locs
         if self.locs .shape[0] <= 10000:
-            _plot_locs_connectome(locs, pdfpath)
+            _plot_locs_connectome(locs, pdfpath=pdfpath)
         else:
             _plot_locs_hyp(locs, pdfpath)
 
@@ -496,8 +555,8 @@ class Model(object):
         """
         Save method for the model object
         The data will be saved as a 'mo' file, which is a dictionary containing
-        the elements of a model object saved in the hd5 format using
-        `deepdish`.
+        the elements of a model object saved in the HDF5 format using
+        h5py for arrays and pandas for tables.
 
         Parameters
         ----------
@@ -505,24 +564,13 @@ class Model(object):
             A name for the file.  If the file extension (.mo) is not specified,
             it will be appended.
         compression : str
-            The kind of compression to use.  See the deepdish documentation for
-            options: http://deepdish.readthedocs.io/en/latest/api_io.html#deepdish.io.save
+            The kind of compression to use. "blosc" maps to gzip for h5py.
         """
-
-        mo = {
-            'numerator' : self.numerator,
-            'denominator' : self.denominator,
-            'locs' : self.locs,
-            'n_subs' : self.n_subs,
-            'meta' : self.meta,
-            'date_created' : self.date_created,
-            'rbf_width' : self.rbf_width
-        }
 
         if fname[-3:]!='.mo':
             fname+='.mo'
 
-        dd.io.save(fname, mo, compression=compression)
+        hdf5_io.save_model(self, fname, compression=compression)
 
     def get_slice(self, loc_inds, inplace=False):
         """

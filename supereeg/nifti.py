@@ -1,8 +1,4 @@
-from __future__ import division
-from __future__ import print_function
-
 import numpy as np
-import six # Python 2 and 3 compatibility
 from nibabel import Nifti1Image, Nifti2Image
 from nilearn.image import concat_imgs, index_img
 from nilearn import plotting as ni_plt
@@ -46,7 +42,7 @@ class Nifti(Nifti1Image):
         from .brain import Brain
         from .model import Model
 
-        if isinstance(data, six.string_types):
+        if isinstance(data, str):
             if data in datadict.keys():
                 data = load(data)
             else:
@@ -120,22 +116,23 @@ class Nifti(Nifti1Image):
 
 
         """
+        base = Nifti1Image(np.asarray(self.dataobj), self.affine, self.header)
         if len(self.shape)>3:
 
             if self.shape[3]>1:
 
                 if hasattr(type(index), "__iter__"):
                     for i in index:
-                        nii = index_img(self, i)
+                        nii = index_img(base, i)
                         ni_plt.plot_anat(nii, output_file=pdfpath)
                 else:
-                    nii = index_img(self, index)
+                    nii = index_img(base, index)
                     ni_plt.plot_anat(nii, output_file=pdfpath)
 
             else:
-                ni_plt.plot_anat(self, output_file=pdfpath)
+                ni_plt.plot_anat(base, output_file=pdfpath)
         else:
-            ni_plt.plot_anat(self, output_file=pdfpath)
+            ni_plt.plot_anat(base, output_file=pdfpath)
 
         if not pdfpath:
             ni_plt.show()
@@ -164,19 +161,20 @@ class Nifti(Nifti1Image):
 
 
         """
+        base = Nifti1Image(np.asarray(self.dataobj), self.affine, self.header)
         if len(self.shape)>3:
 
             if self.shape[3] > 1:
 
                 if hasattr(type(index), "__iter__"):
                     for i in index:
-                        nii = index_img(self, i)
+                        nii = index_img(base, i)
                         ni_plt.plot_glass_brain(nii, output_file=pdfpath)
                 else:
-                    nii = index_img(self, index)
+                    nii = index_img(base, index)
                     ni_plt.plot_glass_brain(nii, output_file=pdfpath)
             else:
-                ni_plt.plot_glass_brain(self, output_file=pdfpath)
+                ni_plt.plot_glass_brain(base, output_file=pdfpath)
 
         if not pdfpath:
             ni_plt.show()
@@ -254,6 +252,26 @@ class Nifti(Nifti1Image):
         bo = Brain(self)
         return bo.get_locs()
 
+    def to_bo(self):
+        """
+        Convert this Nifti to a Brain object.
+
+        Returns
+        -------
+        bo : supereeg.Brain
+        """
+        return Brain(self)
+
+    def to_mo(self):
+        """
+        Convert this Nifti to a Model object.
+
+        Returns
+        -------
+        mo : supereeg.Model
+        """
+        from .model import Model
+        return Model(Brain(self))
 
     def save(self, filepath):
         """
@@ -298,7 +316,7 @@ class Nifti2(Nifti2Image):
         from .brain import Brain
         from .model import Model
 
-        if isinstance(data, six.string_types):
+        if isinstance(data, str):
             if data in datadict.keys():
                 data = load(data)
             else:

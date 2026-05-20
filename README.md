@@ -8,7 +8,7 @@ The way the technique works is to leverage data from different patients' brains 
 
 Although our toolbox is designed with ECoG data in mind, in theory this tool could be applied to a very general set of applications.  The general problem we solve is: given known (correlational) structure of a large number of "features," and given that (at any one time) you only observe some of those features, how much can you infer about what the remaining features are doing?
 
-Toolbox documentation, including a full API specification, tutorials, and gallery of examples may be found [here](http://supereeg.readthedocs.io/) on our readthedocs page.
+Toolbox documentation, including a full API specification, tutorials, and gallery of examples may be found [here](https://supereeg-gpyt.readthedocs.io/) on our readthedocs page.
 
 <h2>Installation</h2>
 
@@ -29,8 +29,22 @@ To install the latest (bleeding edge) version directly from this repository use:
 
 <h3>GPU acceleration</h3>
 
-This is *highly* recommended if you are building your own models. Only NVIDIA GPUs are supported.
-To enable GPU acceleration for building models, pass `gpu=True` to `se.Model`, and install [CuPy](https://docs-cupy.chainer.org/en/stable/install.html).
+This is *highly* recommended if you are building your own models. Only NVIDIA GPUs (CUDA 12+) are supported.
+To enable GPU acceleration for building models, pass `gpu=True` to `se.Model`.
+
+The required CUDA runtime libraries are installed automatically as pip dependencies (`nvidia-cuda-nvrtc-cu12`, `nvidia-cuda-runtime-cu12`). CuPy must also be installed; choose the package matching your CUDA toolkit version:
+
+```bash
+pip install cupy-cuda12x   # CUDA 12.x (newer CUDA versions are backwards-compatible)
+```
+
+After installation, add the following to your shell profile (`~/.bashrc`,`~/.zshrc`, etc.) so CuPy can locate the CUDA runtime:
+
+```bash
+_cuda_path=$(python3 -c "import nvidia.cuda_runtime, os; print(os.path.dirname(nvidia.cuda_runtime.__file__))" 2>/dev/null)
+[[ -n "$_cuda_path" ]] && export CUDA_PATH="$_cuda_path"
+unset _cuda_path
+```
 
 <h3>One time setup</h3>
 
@@ -56,28 +70,52 @@ To enable GPU acceleration for building models, pass `gpu=True` to `se.Model`, a
     - When you see the `root@` prefix, letting you know you're inside the container
 2. Close a running container with `ctrl + d` from the same terminal you used to launch the container, or `docker stop supereeg` from any other terminal
 
+<h2>Migrating legacy files</h2>
+
+Files saved with older versions of supereeg used the [deepdish](https://github.com/uchicago-cs/deepdish) HDF5 format.  That format is no longer supported.  Files loaded via `se.load()` are migrated automatically, but any `.bo`, `.mo`, or `.locs` files you have saved on disk must be converted once.
+
+Use the bundled command-line tool:
+
+```bash
+# Convert a single file in place
+supereeg-migrate path/to/file.bo --overwrite
+
+# Convert every legacy file in a directory (recursively)
+supereeg-migrate path/to/data/ --overwrite --recursive
+```
+
+Or convert programmatically:
+
+```python
+from supereeg.hdf5 import migrate_deepdish_file
+
+migrate_deepdish_file("file.bo", overwrite=True)
+```
+
+After migration the original file is replaced with the new format; no separate output file is created unless you pass a `dst_path`.
+
 <h2>Requirements</h2>
 
 The toolbox is currently supported on Mac and Linux.  It has not been tested on Windows (and we expect key functionality not to work properly on Windows systems). If using Windows, consider using Windows Subsystem for Linux or a Docker container.
 
 Dependencies:
-+ python 3.5+
++ python>=3.12
 + pandas>=0.21.1
 + seaborn>=0.7.1
 + matplotlib>=2.2.0
 + scipy>=0.17.1
-+ numpy>=1.10.4
++ numpy>=2.0.0
 + scikit-learn>=0.18.1
-+ nilearn
-+ nibabel
-+ joblib
-+ multiprocessing
-+ deepdish
-+ future
-+ imageio
-+ hypertools
-+ scikit-image
-+ cupy (HIGHLY RECOMMENDED for GPU acceleration)
++ nilearn>=0.12.1
++ nibabel>=5.3.3
++ joblib>=1.5.3
++ h5py>=3.14.0
++ tables>=3.10.0
++ imageio>=2.37.2
++ hypertools>=0.8.2
++ scikit-image>=0.24.0
++ requests
++ cupy-cuda12x (HIGHLY RECOMMENDED for GPU acceleration; see GPU section above)
 + pytest (for development)
 
 <h2>Citing</h2>

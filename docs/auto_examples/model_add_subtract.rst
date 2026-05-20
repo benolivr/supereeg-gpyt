@@ -3,9 +3,9 @@
 .. _sphx_glr_auto_examples_model_add_subtract.py:
 
 
-=============================
+==============================
 Explore model add and subtract
-=============================
+==============================
 
 In this example, we show you how to add and subtract models.
 

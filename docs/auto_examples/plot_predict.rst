@@ -75,6 +75,7 @@ a nifti and plot the reconstruction.
 
     # plot nifti reconstruction
     reconstructed_nii.plot_glass_brain()
+
 **Total running time of the script:** ( 0 minutes  32.736 seconds)
 
 

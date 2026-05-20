@@ -1,5 +1,5 @@
-supereeg\.simulate\_bo
-======================
+﻿supereeg.simulate\_bo
+=====================
 
 .. currentmodule:: supereeg
 

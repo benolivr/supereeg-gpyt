@@ -1,6 +1,3 @@
-from __future__ import division
-from __future__ import print_function
-
 #TODO: there are multiple implementations of functions like _apply_by_file_index.  these should be consolidated into one
 #common function that is used and called multiple times.  In addition, aggregator and transform functions that are used
 #across apply_by_file wrappers should be shared (rather than defined multiple times).  We could also call_apply_by_file_index
@@ -10,7 +7,6 @@ from __future__ import print_function
 
 import copy
 import os
-import numpy.matlib as mat
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
@@ -23,21 +19,18 @@ from skimage import transform
 
 import io
 from PIL import Image
+from itertools import zip_longest
 
 from nilearn import plotting as ni_plt
 from nilearn import image, datasets
-from nilearn.input_data import NiftiMasker
+from nilearn.maskers import NiftiMasker
 from scipy.stats import kurtosis, zscore, pearsonr
 from scipy.spatial.distance import pdist
 from scipy.spatial.distance import cdist
 from scipy.spatial.distance import squareform
 from scipy.special import logsumexp
 from scipy import linalg
-from scipy.ndimage.interpolation import zoom
-try:
-    from itertools import zip_longest
-except:
-    from itertools import izip_longest as zip_longest
+from scipy.ndimage import zoom
 
 
 def _std(res=None):
@@ -152,7 +145,7 @@ def _resample_nii(x, target_res, precision=5):
 
     try:
         z[z < 1e-5] = np.nan
-    except:
+    except Exception:
         pass
     return Nifti(z, target_affine)
 
@@ -230,12 +223,12 @@ def _get_corrmat(bo):
         return p + n
 
     def zcorr_xform(bo):
-        return np.multiply(bo.dur, _r2z(1 - squareform(pdist(bo.get_data().T, 'correlation'))))
+        return _r2z(1 - squareform(pdist(bo.get_data().T, 'correlation')))
 
     summed_zcorrs = _apply_by_file_index(bo, zcorr_xform, aggregate)
 
-    #weight each session by recording time
-    return _z2r(summed_zcorrs / np.sum(bo.dur))
+    n_sessions = len(bo.sessions.unique())
+    return _z2r(summed_zcorrs / n_sessions)
 
 
 def _z_score(bo):
@@ -359,7 +352,7 @@ def tal2mni(r):
     up = np.array([[0.9900, 0, 0, 0], [0, 0.9700, 0, 0], [0, 0, 0.9200, 0], [0, 0, 0, 1.0000]])
     down = np.array([[0.9900, 0, 0, 0], [0, 0.9700, 0, 0], [0, 0, 0.8400, 0], [0, 0, 0, 1.0000]])
 
-    inpoints = np.c_[r, np.ones(r.shape[0], dtype=np.float)].T
+    inpoints = np.c_[r, np.ones(r.shape[0], dtype=float)].T
     tmp = inpoints[2, :] < 0
     inpoints[:, tmp] = linalg.solve(np.dot(rotmat, down), inpoints[:, tmp])
     inpoints[:, ~tmp] = linalg.solve(np.dot(rotmat, up), inpoints[:, ~tmp])
@@ -407,7 +400,7 @@ def _blur_corrmat_cupy(Z, Zp, weights, block_size=1024):
     maxes = cp.zeros(n_wt).astype(cp.float32)
 
     block = (block_size, 1, 1)
-    num_blocks = np.int(np.ceil(n_wt / block_size))
+    num_blocks = int(np.ceil(n_wt / block_size))
     grid = (n_wt, 1, 1)
 
     get_maxes(grid, block, (weights, maxes, matches, wtx_gpu, wty_gpu, ktx_gpu, kty_gpu, w_n_rows, w_n_cols, n_kt))
@@ -688,7 +681,7 @@ def _timeseries_recon(bo, mo, chunk_size=25000, preprocess='zscore', recon_loc_i
         for x in filter_chunks:
             try:
                 combined_data[x,range(len(recon_loc_inds))] = _reconstruct_activity(data[x, :], Kba, Kaa_inv, recon_loc_inds=recon_loc_inds)
-            except:
+            except Exception:
                 print('issue with chunksize: ' + str(x))
     else:
         combined_data = np.zeros((data.shape[0], K.shape[0]), dtype=data.dtype)
@@ -719,10 +712,7 @@ def _chunker(iterable, chunksize, fillvalue=None):
         Chunked timeseries
 
     """
-    try:
-        from itertools import zip_longest as zip_longest
-    except:
-        from itertools import izip_longest as zip_longest
+    from itertools import zip_longest
 
     args = [iter(iterable)] * chunksize
     return list(zip_longest(*args, fillvalue=fillvalue))
@@ -849,31 +839,30 @@ def _normalize_Y(Y_matrix): #TODO: should be part of bo.get_data and/or Brain.__
 
     """
     Y = Y_matrix
-    m = mat.repmat(np.min(Y, axis=0), Y.shape[0], 1)
+    m = np.tile(np.min(Y, axis=0), (Y.shape[0], 1))
     Y = Y - m
-    m = mat.repmat(np.max(Y, axis=0), Y.shape[0], 1)
+    m = np.tile(np.max(Y, axis=0), (Y.shape[0], 1))
     Y = np.divide(Y, m)
-    added = mat.repmat(0.5 + np.arange(Y.shape[1]), Y.shape[0], 1)
+    added = np.tile(0.5 + np.arange(Y.shape[1]), (Y.shape[0], 1))
     Y = Y + added
     return pd.DataFrame(Y)
 
 
 def _fullfact(dims):
     '''
-    Replicates MATLAB's _fullfact function (behaves the same way)
+    Replicates MATLAB's fullfact function (behaves the same way)
     '''
-    vals = np.asmatrix(list(range(1, dims[0] + 1))).T
+    vals = np.arange(1, dims[0] + 1).reshape(-1, 1)
     if len(dims) == 1:
         return vals
-    else:
-        aftervals = np.asmatrix(_fullfact(dims[1:]))
-        inds = np.asmatrix(np.zeros((np.prod(dims), len(dims))))
-        row = 0
-        for i in range(aftervals.shape[0]):
-            inds[row:(row + len(vals)), 0] = vals
-            inds[row:(row + len(vals)), 1:] = np.tile(aftervals[i, :], (len(vals), 1))
-            row += len(vals)
-        return inds
+    aftervals = _fullfact(dims[1:])
+    inds = np.zeros((np.prod(dims), len(dims)))
+    row = 0
+    for i in range(aftervals.shape[0]):
+        inds[row:(row + len(vals)), 0] = vals[:, 0]
+        inds[row:(row + len(vals)), 1:] = np.tile(aftervals[i, :], (len(vals), 1))
+        row += len(vals)
+    return inds
 
 
 def model_compile(data):
@@ -940,15 +929,13 @@ def _near_neighbor(bo, mo, match_threshold='auto'): #TODO: should this be part o
         nbo.locs.iloc[min_ind[0], :] = mo.locs.iloc[min_ind[1], :]
         d[min_ind[0]] = np.inf
         d[:, min_ind[1]] = np.inf
-    if not match_threshold in (0, none):
+    if not match_threshold in (0, None):
 
         if match_threshold == 'auto':
             v_size = _vox_size(mo.locs)
-            thresh_bool = abs(nbo.locs - bo.locs) > v_size
-            thresh_bool = thresh_bool.any(1).ravel()
+            thresh_bool = (abs(nbo.locs - bo.locs) > v_size).any(axis=1).to_numpy()
         else:
-            thresh_bool = abs(nbo.locs - bo.locs) > match_threshold
-            thresh_bool = thresh_bool.any(1).ravel()
+            thresh_bool = (abs(nbo.locs - bo.locs) > match_threshold).any(axis=1).to_numpy()
             assert match_threshold > 0, 'Negative Euclidean distances are not allowed'
         nbo.data = nbo.data.loc[:, ~thresh_bool]
         nbo.locs = nbo.locs.loc[~thresh_bool, :]
@@ -1107,7 +1094,7 @@ def get_rows(all_locations, subj_locations):
             for c in range(all_locations.shape[1]):
                 possible_locations[all_locations[:, c] != subj_locations[i, c], :] = 0
             inds[0, i] = np.where(possible_locations == 1)[0][0]
-        except:
+        except IndexError:
             pass
     inds = inds[~np.isnan(inds)]
     return [int(x) for x in inds]
@@ -1195,7 +1182,7 @@ def _count_overlapping(X, Y):
         Array of length Y.shape[0] with 0s and 1s, where 1s denote rows in Y that are also in X
     """
 
-    return np.sum([(Y == x).all(1) for idx, x in X.iterrows()], 0).astype(bool)
+    return np.sum([(Y == x).all(axis=1) for idx, x in X.iterrows()], 0).astype(bool)
 
 
 def make_gif_pngs(nifti, gif_path, index=range(100, 200), name=None, **kwargs):
@@ -1458,7 +1445,7 @@ def _plot_locs_connectome(locs, label=None, pdfpath=None):
 
     """
     if locs.empty:
-        ni_plt.plot_connectome(np.eye(locs.shape[0]), locs)
+        ni_plt.plot_connectome(np.eye(locs.shape[0]), locs, colorbar=False)
     else:
 
         if label is not None:
@@ -1477,7 +1464,7 @@ def _plot_locs_connectome(locs, label=None, pdfpath=None):
             colors = 'k'
         ni_plt.plot_connectome(np.eye(locs.shape[0]), locs, output_file=pdfpath,
                                node_kwargs={'alpha': 0.5, 'edgecolors': None},
-                               node_size=10, node_color=colors)
+                               node_size=10, node_color=colors, colorbar=False)
     if not pdfpath:
         ni_plt.show()
 
@@ -1556,23 +1543,23 @@ def _nifti_to_brain(nifti, mask_file=None):
     else:
         warnings.warn('Nifti format not supported')
 
+    # nibabel 5.x ImageSlicer rejects subclasses; cast to plain Nifti1Image
+    fit_img = nib.Nifti1Image(img.get_fdata(), img.affine, img.header)
     mask = NiftiMasker(mask_strategy='background')
     if mask_file is None:
-        mask.fit(nifti)
+        mask.fit(fit_img)
     else:
         mask.fit(mask_file)
 
     hdr = img.header
     S = img.get_sform()
 
-    Y = np.float64(mask.transform(nifti)).copy()
-    vmask = np.nonzero(mask.mask_img_.dataobj.flatten())[0]
+    Y = np.atleast_2d(np.float64(mask.transform(nifti))).copy()
+    mask_data = np.asarray(mask.mask_img_.dataobj)
+    vmask = np.nonzero(mask_data.flatten())[0]
+    ijk = np.column_stack(np.unravel_index(vmask, mask_data.shape))
 
-    vox_coords = _fullfact(img.shape[0:3])[vmask, ::-1] - 1
-    if 'from .bo' in str(hdr['descrip']):
-        vox_coords = vox_coords[:,::-1]
-
-    R = np.array(np.dot(vox_coords, S[0:3, 0:3])) + S[:3, 3]
+    R = np.dot(ijk, S[0:3, 0:3]) + S[:3, 3]
 
     return Y, R, {'header': hdr, 'unscaled_timing':True}, img.affine
 
@@ -1647,9 +1634,6 @@ def _brain_to_nifti(bo, nii_template, antialiasing=False): #FIXME: this is incre
         with np.errstate(invalid='ignore'):
             for i in range(R.shape[0]):
                 data[round_locs[i, 0], round_locs[i, 1], round_locs[i, 2], :] = np.divide(data[round_locs[i, 0], round_locs[i, 1], round_locs[i, 2], :], counts[round_locs[i, 0], round_locs[i, 1], round_locs[i, 2], :])
-
-    if bo.nifti_shape is not None:
-        data = data.reshape(-1, order='F').reshape(data.shape)
 
     nii = Nifti(data, affine=S)
     nii.header['descrip'] = 'from .bo'
@@ -1761,7 +1745,7 @@ def _plot_borderless(x, savefile=None, vmin=-1, vmax=1, width=1000, dpi=100, cma
 
     fig.set_frameon(False)
 
-    if not savefile == None:
+    if savefile is not None:
         fig.savefig(savefile, figsize=(width / float(dpi), height / float(dpi)), bbox_inches='tight', pad_inches=0,
                     dpi=dpi)
     return fig

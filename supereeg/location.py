@@ -1,10 +1,7 @@
-from __future__ import division
-from __future__ import print_function
 import time
-import six
 import numpy as np
 import pandas as pd
-import deepdish as dd
+from . import hdf5 as hdf5_io
 
 from .brain import Brain
 from .helpers import _unique, _union, _count_overlapping, tal2mni, _plot_locs_connectome, \
@@ -59,13 +56,13 @@ class Location(object):
         if isinstance(data, Location):
             self = data
             return
-        elif isinstance(data, six.string_types):
+        elif isinstance(data, str):
             self = Location(load(data))
             return
         elif (isinstance(data, Brain) or isinstance(data, Model) or isinstance(data, Nifti)):
             self = data.get_locs()
             return
-        elif isinstance(data, np.array):
+        elif isinstance(data, np.ndarray):
             assert data.shape[1] == 3, 'Locations must be 3D'
             data = pd.DataFrame(data=data, columns=['x', 'y', 'z'])
         elif isinstance(data, pd.DataFrame):
@@ -100,7 +97,7 @@ class Location(object):
         return self
 
     def __next__(self):
-        if self.counter >= self.data.shape[0]:
+        if self.counter >= self.locs.shape[0]:
             raise StopIteration
         s = self[self.counter]
         self.counter+=1
@@ -139,7 +136,6 @@ class Location(object):
         Prints the number of electrodes, recording time, number of recording
         sessions, date created, and any optional meta data.
         """
-        self.update_info()
         print('Number of electrodes: ' + str(self.locs.shape[0]))
         print('Date created: ' + str(self.date_created))
         print('Meta data: ' + str(self.meta))
@@ -172,8 +168,8 @@ class Location(object):
         Save method for the location object
 
         The data will be saved as a 'locs' file, which is a dictionary containing
-        the elements of a locations object saved in the hd5 format using
-        `deepdish`.
+        the elements of a locations object saved in the HDF5 format using
+        h5py for arrays and pandas for tables.
 
         Parameters
         ----------
@@ -183,18 +179,11 @@ class Location(object):
             it will be appended.
 
         compression : str
-            The kind of compression to use.  See the deepdish documentation for
-            options: http://deepdish.readthedocs.io/en/latest/api_io.html#deepdish.io.save
+            The kind of compression to use. "blosc" maps to gzip for h5py.
 
         """
-
-        lo = {
-            'locs': self.locs,
-            'meta': self.meta,
-            'date_created': self.date_created,
-        }
 
         if fname[-5:] != '.locs':
             fname += '.locs'
 
-        dd.io.save(fname, lo, compression=compression)
+        hdf5_io.save_location(self, fname, compression=compression)
